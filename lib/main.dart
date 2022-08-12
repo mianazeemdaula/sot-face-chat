@@ -1,8 +1,12 @@
 import 'package:face_chat/views/auth/login_view.dart';
 import 'package:flutter/material.dart';
 
+// ? for null value (means no value at the time of the creation/making);
+// make sure value is not null
+// manullay define the null safty check !
+
 main() {
-  runApp(FaceChat());
+  runApp(const FaceChat());
 }
 
 class FaceChat extends StatelessWidget {
@@ -11,6 +15,20 @@ class FaceChat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(
+        inputDecorationTheme: InputDecorationTheme(
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide.none,
+          ),
+          fillColor: Colors.blue.shade100,
+          filled: true,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 25,
+            vertical: 18,
+          ),
+        ),
+      ),
       home: LoginView(),
     );
   }

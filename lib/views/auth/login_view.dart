@@ -19,69 +19,91 @@ class _LoginViewState extends State<LoginView> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   bool isBusy = false;
+
+  final formKey = GlobalKey<FormState>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Login"),
+        title: const Text("Login"),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Stack(
-          children: [
-            Column(
-              children: [
-                TextFormField(
-                  controller: emailController,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    label: Text('Email'),
+        padding: const EdgeInsets.all(12.0),
+        child: Form(
+          key: formKey,
+          child: Stack(
+            children: [
+              Column(
+                children: [
+                  TextFormField(
+                    controller: emailController,
+                    decoration: const InputDecoration(
+                      label: Text('Email'),
+                    ),
+                    validator: (String? v) {
+                      if (v == null || v.isEmpty) {
+                        return "Please enter email";
+                      } else {
+                        return null;
+                      }
+                    },
                   ),
-                ),
-                const SizedBox(height: 10),
-                TextFormField(
-                  controller: passwordController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    label: Text('Password'),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: passwordController,
+                    decoration: const InputDecoration(
+                      label: Text('Password'),
+                    ),
+                    obscureText: true,
+                    validator: (String? v) {
+                      if (v == null || v.isEmpty) {
+                        return "Please enter password";
+                      } else if (v.length < 6) {
+                        return "Please enter at least 6 character";
+                      } else {
+                        return null;
+                      }
+                    },
                   ),
-                  obscureText: true,
-                ),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (emailController.text == email &&
-                        passwordController.text == password) {
-                      setState(() {
-                        isBusy = true;
-                      });
-                      await Future.delayed(Duration(seconds: 2));
-                      setState(() {
-                        isBusy = false;
-                      });
-                      appNavPush(context, HomeView());
-                    } else {
-                      appSnackBar(context, "Email or password not mached");
-                    }
-                  },
-                  child: const Text('Login'),
-                ),
-              ],
-            ),
-            Visibility(
-              visible: isBusy,
-              child: Center(
-                child: Container(
-                  padding: EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.yellow,
-                    shape: BoxShape.circle,
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (formKey.currentState!.validate()) {
+                        if (emailController.text == email &&
+                            passwordController.text == password) {
+                          setState(() {
+                            isBusy = true;
+                          });
+                          await Future.delayed(Duration(seconds: 2));
+                          setState(() {
+                            isBusy = false;
+                          });
+                          appNavPush(context, HomeView());
+                        } else {
+                          appSnackBar(context, "Email or password not mached");
+                        }
+                      }
+                    },
+                    child: const Text('Login'),
                   ),
-                  child: CircularProgressIndicator(),
-                ),
+                ],
               ),
-            )
-          ],
+              Visibility(
+                visible: isBusy,
+                child: Center(
+                  child: Container(
+                    padding: EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.yellow,
+                      shape: BoxShape.circle,
+                    ),
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );
