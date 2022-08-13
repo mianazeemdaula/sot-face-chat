@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "494056677691",
+    "project_id": "sot-tech",
+    "storage_bucket": "sot-tech.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:494056677691:android:d8a9677e3015ff85fbd71e",
+        "android_client_info": {
+          "package_name": "com.sot.facechat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "494056677691-k464i1ghuae57jvj0pe28n6n0t301qcv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sot.facechat",
+            "certificate_hash": "e197ccf6ed46ca5061ab2f232df009ca203ccf27"
+          }
+        },
+        {
+          "client_id": "494056677691-huvpfobqbti11l4vq9th4kttv9dd6ftp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhJSTTa7pvlcYc7uLHezUsyA4fX_Hpq9I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "494056677691-huvpfobqbti11l4vq9th4kttv9dd6ftp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

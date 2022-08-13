@@ -1,6 +1,7 @@
 import 'package:face_chat/core/app_navigator.dart';
 import 'package:face_chat/core/snack_bar.dart';
 import 'package:face_chat/views/home/home_view.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/foundation/key.dart';
 import 'package:flutter/src/widgets/framework.dart';
@@ -13,9 +14,6 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
-  String email = "abc@gmail.com";
-  String password = "123456";
-
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   bool isBusy = false;
@@ -70,19 +68,17 @@ class _LoginViewState extends State<LoginView> {
                   ElevatedButton(
                     onPressed: () async {
                       if (formKey.currentState!.validate()) {
-                        if (emailController.text == email &&
-                            passwordController.text == password) {
-                          setState(() {
-                            isBusy = true;
-                          });
-                          await Future.delayed(Duration(seconds: 2));
-                          setState(() {
-                            isBusy = false;
-                          });
-                          appNavPush(context, HomeView());
-                        } else {
-                          appSnackBar(context, "Email or password not mached");
-                        }
+                        setState(() {
+                          isBusy = true;
+                        });
+                        await FirebaseAuth.instance.signInWithEmailAndPassword(
+                          email: emailController.text,
+                          password: passwordController.text,
+                        );
+                        setState(() {
+                          isBusy = false;
+                        });
+                        appNavPush(context, HomeView());
                       }
                     },
                     child: const Text('Login'),

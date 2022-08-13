@@ -1,11 +1,14 @@
 import 'package:face_chat/views/auth/login_view.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 // ? for null value (means no value at the time of the creation/making);
 // make sure value is not null
 // manullay define the null safty check !
 
-main() {
+Future main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const FaceChat());
 }
 
