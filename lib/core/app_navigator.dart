@@ -17,3 +17,13 @@ void appNavReplace(BuildContext context, Widget widget) {
     ),
   );
 }
+
+void appNavPopUntil(BuildContext context, Widget widget) {
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(
+      builder: (context) => widget,
+    ),
+    (route) => route.isFirst,
+  );
+}
