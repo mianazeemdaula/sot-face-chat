@@ -1,21 +1,21 @@
 import 'package:face_chat/core/app_navigator.dart';
 import 'package:face_chat/core/snack_bar.dart';
-import 'package:face_chat/views/auth/signup_view.dart';
 import 'package:face_chat/views/home/home_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/foundation/key.dart';
 import 'package:flutter/src/widgets/framework.dart';
 
-class LoginView extends StatefulWidget {
-  const LoginView({Key? key}) : super(key: key);
+class SignupView extends StatefulWidget {
+  const SignupView({Key? key}) : super(key: key);
 
   @override
-  State<LoginView> createState() => _LoginViewState();
+  State<SignupView> createState() => _SignupViewState();
 }
 
-class _LoginViewState extends State<LoginView> {
+class _SignupViewState extends State<SignupView> {
   final emailController = TextEditingController();
+  final nameController = TextEditingController();
   final passwordController = TextEditingController();
   bool isBusy = false;
 
@@ -25,7 +25,7 @@ class _LoginViewState extends State<LoginView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Login"),
+        title: const Text("Signup"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(12.0),
@@ -35,6 +35,20 @@ class _LoginViewState extends State<LoginView> {
             children: [
               Column(
                 children: [
+                  TextFormField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      label: Text('Namae'),
+                    ),
+                    validator: (String? v) {
+                      if (v == null || v.isEmpty) {
+                        return "Please enter Name";
+                      } else {
+                        return null;
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 10),
                   TextFormField(
                     controller: emailController,
                     decoration: const InputDecoration(
@@ -74,47 +88,27 @@ class _LoginViewState extends State<LoginView> {
                             isBusy = true;
                           });
                           await FirebaseAuth.instance
-                              .signInWithEmailAndPassword(
+                              .createUserWithEmailAndPassword(
                             email: emailController.text,
                             password: passwordController.text,
                           );
                           setState(() {
                             isBusy = false;
                           });
-                          appNavReplace(context, HomeView());
+                          appNavPush(context, HomeView());
                         }
                       } on FirebaseAuthException catch (e) {
                         setState(() {
                           isBusy = false;
                         });
                         print(e.code);
-                        if (e.code == 'wrong-password') {
-                          appSnackBar(context, e.message!);
-                        } else if (e.code == 'user-not-found') {
-                          appSnackBar(context, e.message!);
-                        } else if (e.code == 'user-disabled') {
+                        if (e.code == 'email-already-in-use') {
                           appSnackBar(context, e.message!);
                         }
                       }
                     },
                     child: const Text('Login'),
                   ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text("Dont have an account? "),
-                      const SizedBox(
-                        width: 5,
-                      ),
-                      InkWell(
-                        onTap: () {
-                          appNavPush(context, SignupView());
-                        },
-                        child: const Text("Signup"),
-                      )
-                    ],
-                  )
                 ],
               ),
               Visibility(

@@ -8,3 +8,12 @@ void appNavPush(BuildContext context, Widget widget) {
     ),
   );
 }
+
+void appNavReplace(BuildContext context, Widget widget) {
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (context) => widget,
+    ),
+  );
+}
