@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:face_chat/core/app_navigator.dart';
 import 'package:face_chat/views/auth/login_view.dart';
+import 'package:face_chat/views/home/add_post.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -11,19 +12,25 @@ class HomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
+        title: const Text('Home'),
         actions: [
           IconButton(
             onPressed: () async {
               await FirebaseAuth.instance.signOut();
               appNavReplace(context, LoginView());
             },
-            icon: Icon(Icons.logout),
+            icon: const Icon(Icons.logout),
           )
         ],
       ),
-      body: FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        future: FirebaseFirestore.instance.collection('posts').get(),
+      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance
+            .collection('posts')
+            .orderBy(
+              'created_at',
+              descending: true,
+            )
+            .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             return ListView.builder(
@@ -44,10 +51,24 @@ class HomeView extends StatelessWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                snapshot.data!.docs[index]
-                                    .data()['likes']
-                                    .toString(),
+                              Row(
+                                children: [
+                                  Text(
+                                    snapshot.data!.docs[index]
+                                        .data()['likes']
+                                        .toString(),
+                                  ),
+                                  SizedBox(width: 5),
+                                  IconButton(
+                                    icon: Icon(Icons.thumb_up_alt),
+                                    onPressed: () {
+                                      snapshot.data!.docs[index].reference
+                                          .update({
+                                        'likes': FieldValue.increment(1),
+                                      });
+                                    },
+                                  ),
+                                ],
                               ),
                               Text(
                                 snapshot.data!.docs[index]
@@ -64,11 +85,17 @@ class HomeView extends StatelessWidget {
               },
             );
           } else {
-            return Center(
+            return const Center(
               child: CircularProgressIndicator(),
             );
           }
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          appNavPush(context, AddPostView());
+        },
+        child: Icon(Icons.add),
       ),
     );
   }
