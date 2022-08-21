@@ -3,16 +3,18 @@ import 'package:face_chat/core/snack_bar.dart';
 import 'package:face_chat/models/post.dart';
 import 'package:flutter/material.dart';
 
-class AddPostView extends StatelessWidget {
-  AddPostView({Key? key}) : super(key: key);
+class EditPostView extends StatelessWidget {
+  EditPostView({Key? key, required this.post}) : super(key: key);
+  final Post post;
   final formKey = GlobalKey<FormState>();
-  final bodyController = TextEditingController();
+  late TextEditingController bodyController;
 
   @override
   Widget build(BuildContext context) {
+    bodyController = TextEditingController(text: post.body);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New Post'),
+        title: const Text('Edit Post'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -43,16 +45,18 @@ class AddPostView extends StatelessWidget {
               ElevatedButton(
                 onPressed: () async {
                   if (formKey.currentState!.validate()) {
-                    Post post = Post.create(body: bodyController.text);
                     await FirebaseFirestore.instance
                         .collection('posts')
-                        .doc()
-                        .set(post.toJson());
+                        .doc(post.id)
+                        .update({
+                      'body': bodyController.text,
+                      'updated_at': FieldValue.serverTimestamp(),
+                    });
                     Navigator.pop(context);
-                    appSnackBar(context, "Your post has been created.");
+                    appSnackBar(context, "Your post has been updated.");
                   }
                 },
-                child: const Text('Save Post'),
+                child: const Text('Update Post'),
               )
             ],
           ),
