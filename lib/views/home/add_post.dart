@@ -1,12 +1,36 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:face_chat/core/snack_bar.dart';
 import 'package:face_chat/models/post.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
-class AddPostView extends StatelessWidget {
+class AddPostView extends StatefulWidget {
   AddPostView({Key? key}) : super(key: key);
+
+  @override
+  State<AddPostView> createState() => _AddPostViewState();
+}
+
+class _AddPostViewState extends State<AddPostView> {
   final formKey = GlobalKey<FormState>();
+
   final bodyController = TextEditingController();
+
+  File? image;
+
+  Future pickImage() async {
+    final ImagePicker _picker = ImagePicker();
+    final XFile? pickedImage =
+        await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedImage != null) {
+      setState(() {
+        image = File(pickedImage.path);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +44,24 @@ class AddPostView extends StatelessWidget {
           key: formKey,
           child: Column(
             children: [
+              Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                ),
+                child: GestureDetector(
+                  onTap: () {
+                    pickImage();
+                  },
+                  child: image == null
+                      ? Center(
+                          child: Text('Please Select Image'),
+                        )
+                      : Image.file(image!),
+                ),
+              ),
+              SizedBox(height: 10),
               TextFormField(
                 controller: bodyController,
                 decoration: const InputDecoration(
@@ -43,7 +85,22 @@ class AddPostView extends StatelessWidget {
               ElevatedButton(
                 onPressed: () async {
                   if (formKey.currentState!.validate()) {
-                    Post post = Post.create(body: bodyController.text);
+                    if (image == null) {
+                      appSnackBar(context, "Please select image");
+                      return;
+                    }
+                    var storage = FirebaseStorage.instance;
+                    String ext = image!.path.split('.').last;
+                    String path =
+                        "${DateTime.now().microsecondsSinceEpoch}.$ext";
+                    Reference ref = storage.ref().child(path);
+                    UploadTask task = ref.putFile(image!);
+                    await task.whenComplete(() => null);
+                    String downoadPath = await ref.getDownloadURL();
+                    Post post = Post.create(
+                      body: bodyController.text,
+                      image: downoadPath,
+                    );
                     await FirebaseFirestore.instance
                         .collection('posts')
                         .doc()

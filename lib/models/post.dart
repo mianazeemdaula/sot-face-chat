@@ -5,6 +5,7 @@ class Post {
   final String body;
   final int comments;
   final int likes;
+  final String? image;
   final DateTime createdAt;
 
   Post({
@@ -13,16 +14,19 @@ class Post {
     required this.comments,
     required this.likes,
     required this.createdAt,
+    this.image,
   });
 
   factory Post.create({
     required body,
+    String? image,
   }) {
     return Post(
       body: body,
       comments: 0,
       likes: 0,
       createdAt: DateTime.now(),
+      image: image,
     );
   }
 
@@ -32,6 +36,7 @@ class Post {
       body: snapshot.data()['body'] ?? snapshot.data()['message'],
       comments: snapshot.data()['comments'],
       likes: snapshot.data()['likes'],
+      image: snapshot.data()['image'],
       createdAt: snapshot.data()['created_at'].toDate(),
     );
   }
@@ -42,6 +47,7 @@ class Post {
       'comments': comments,
       'likes': likes,
       'created_at': FieldValue.serverTimestamp(),
+      'image': image,
     };
   }
 }
