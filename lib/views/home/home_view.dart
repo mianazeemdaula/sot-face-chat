@@ -121,6 +121,7 @@ class HomeView extends StatelessWidget {
                             ],
                           ),
                           SizedBox(height: 5),
+                          if (post.image != null) Image.network(post.image!),
                           Text(
                             post.body,
                           ),

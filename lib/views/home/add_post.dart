@@ -1,14 +1,14 @@
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:face_chat/core/snack_bar.dart';
 import 'package:face_chat/models/post.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class AddPostView extends StatefulWidget {
-  AddPostView({Key? key}) : super(key: key);
+  const AddPostView({Key? key}) : super(key: key);
 
   @override
   State<AddPostView> createState() => _AddPostViewState();
@@ -21,10 +21,9 @@ class _AddPostViewState extends State<AddPostView> {
 
   File? image;
 
-  Future pickImage() async {
-    final ImagePicker _picker = ImagePicker();
-    final XFile? pickedImage =
-        await _picker.pickImage(source: ImageSource.gallery);
+  void selectImage(ImageSource source) async {
+    var picker = ImagePicker();
+    XFile? pickedImage = await picker.pickImage(source: source);
     if (pickedImage != null) {
       setState(() {
         image = File(pickedImage.path);
@@ -45,23 +44,35 @@ class _AddPostViewState extends State<AddPostView> {
           child: Column(
             children: [
               Container(
-                width: 150,
-                height: 150,
+                width: 200,
+                height: 200,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: Colors.grey.shade200,
                 ),
-                child: GestureDetector(
-                  onTap: () {
-                    pickImage();
-                  },
-                  child: image == null
-                      ? Center(
-                          child: Text('Please Select Image'),
-                        )
-                      : Image.file(image!),
-                ),
+                child: image == null
+                    ? const Center(
+                        child: Text('Select Image'),
+                      )
+                    : Image.file(image!),
               ),
-              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      selectImage(ImageSource.gallery);
+                    },
+                    icon: Icon(Icons.image),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      selectImage(ImageSource.camera);
+                    },
+                    icon: Icon(Icons.camera),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: bodyController,
                 decoration: const InputDecoration(
@@ -85,22 +96,25 @@ class _AddPostViewState extends State<AddPostView> {
               ElevatedButton(
                 onPressed: () async {
                   if (formKey.currentState!.validate()) {
+                    //1- Image must be selected
+                    //2- Firebase storage (crate a new file)
+                    //3- Data upload
+                    //4- When upload done
+                    //5- Get the public link
                     if (image == null) {
                       appSnackBar(context, "Please select image");
                       return;
                     }
-                    var storage = FirebaseStorage.instance;
-                    String ext = image!.path.split('.').last;
+                    String ext = image!.path.split(".").last;
                     String path =
-                        "${DateTime.now().microsecondsSinceEpoch}.$ext";
-                    Reference ref = storage.ref().child(path);
+                        "${DateTime.now().microsecondsSinceEpoch}_${FirebaseAuth.instance.currentUser!.uid}.$ext";
+                    Reference ref = FirebaseStorage.instance.ref().child(path);
                     UploadTask task = ref.putFile(image!);
                     await task.whenComplete(() => null);
-                    String downoadPath = await ref.getDownloadURL();
-                    Post post = Post.create(
-                      body: bodyController.text,
-                      image: downoadPath,
-                    );
+                    String link = await ref.getDownloadURL();
+
+                    Post post =
+                        Post.create(body: bodyController.text, image: link);
                     await FirebaseFirestore.instance
                         .collection('posts')
                         .doc()

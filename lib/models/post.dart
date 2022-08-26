@@ -37,7 +37,9 @@ class Post {
       comments: snapshot.data()['comments'],
       likes: snapshot.data()['likes'],
       image: snapshot.data()['image'],
-      createdAt: snapshot.data()['created_at'].toDate(),
+      createdAt: snapshot.data()['created_at'] == null
+          ? DateTime.now()
+          : snapshot.data()['created_at'].toDate(),
     );
   }
 
