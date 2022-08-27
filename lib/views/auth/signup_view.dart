@@ -1,5 +1,6 @@
 import 'package:face_chat/core/app_navigator.dart';
 import 'package:face_chat/core/snack_bar.dart';
+import 'package:face_chat/views/auth/registration_view.dart';
 import 'package:face_chat/views/home/home_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -95,7 +96,7 @@ class _SignupViewState extends State<SignupView> {
                           setState(() {
                             isBusy = false;
                           });
-                          appNavPush(context, HomeView());
+                          appNavPopAndPush(context, RegistrationView());
                         }
                       } on FirebaseAuthException catch (e) {
                         setState(() {

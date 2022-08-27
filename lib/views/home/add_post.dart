@@ -21,6 +21,7 @@ class _AddPostViewState extends State<AddPostView> {
   final bodyController = TextEditingController();
 
   File? image;
+  bool isBusy = false;
 
   void selectImage(ImageSource source) async {
     var picker = ImagePicker();
@@ -97,15 +98,13 @@ class _AddPostViewState extends State<AddPostView> {
               ElevatedButton(
                 onPressed: () async {
                   if (formKey.currentState!.validate()) {
-                    //1- Image must be selected
-                    //2- Firebase storage (crate a new file)
-                    //3- Data upload
-                    //4- When upload done
-                    //5- Get the public link
                     if (image == null) {
                       appSnackBar(context, "Please select image");
                       return;
                     }
+                    setState(() {
+                      isBusy = true;
+                    });
                     String link = await appUploadImage(image!);
 
                     Post post = Post.create(
@@ -117,12 +116,16 @@ class _AddPostViewState extends State<AddPostView> {
                         .collection('posts')
                         .doc()
                         .set(post.toJson());
+                    setState(() {
+                      isBusy = false;
+                    });
                     Navigator.pop(context);
                     appSnackBar(context, "Your post has been created.");
                   }
                 },
                 child: const Text('Save Post'),
-              )
+              ),
+              if (isBusy) const LinearProgressIndicator(),
             ],
           ),
         ),
