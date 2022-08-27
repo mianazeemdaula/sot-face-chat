@@ -1,5 +1,6 @@
 import 'package:face_chat/views/auth/login_view.dart';
 import 'package:face_chat/views/home/home_view.dart';
+import 'package:face_chat/views/splash/splash_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -34,8 +35,7 @@ class FaceChat extends StatelessWidget {
           ),
         ),
       ),
-      home:
-          FirebaseAuth.instance.currentUser == null ? LoginView() : HomeView(),
+      home: const SplashView(),
     );
   }
 }

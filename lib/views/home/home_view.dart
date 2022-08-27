@@ -39,122 +39,147 @@ class HomeView extends StatelessWidget {
               itemCount: snapshot.data!.docs.length,
               itemBuilder: (context, index) {
                 Post post = Post.fromJson(snapshot.data!.docs[index]);
-                return Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Material(
-                    color: Colors.white,
-                    child: Padding(
-                      padding: const EdgeInsets.all(15.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              CircleAvatar(),
-                              SizedBox(width: 5),
-                              Text('User Name'),
-                              PopupMenuButton(
-                                itemBuilder: (context) => [
-                                  const PopupMenuItem(
-                                    value: 0,
-                                    child: Text('Edit'),
-                                  ),
-                                  const PopupMenuItem(
-                                    value: 1,
-                                    child: Text('Delete'),
-                                  ),
-                                ],
-                                onSelected: (int v) {
-                                  if (v == 0) {
-                                    appNavPush(
-                                      context,
-                                      EditPostView(
-                                        post: post,
+                return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                    future: FirebaseFirestore.instance
+                        .doc(
+                            "users/${snapshot.data!.docs[index].data()['user_id']}")
+                        .get(),
+                    builder: (context, userSnapshot) {
+                      if (!userSnapshot.hasData) {
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Material(
+                          color: Colors.white,
+                          child: Padding(
+                            padding: const EdgeInsets.all(15.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundImage: NetworkImage(
+                                        userSnapshot.data!.data()!['image'],
                                       ),
-                                    );
-                                  } else if (v == 1) {
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        return Dialog(
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(10.0),
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Text(
-                                                  "Are you sure to delete this post?",
-                                                ),
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceEvenly,
-                                                  children: [
-                                                    TextButton(
-                                                      onPressed: () {
-                                                        Navigator.pop(context);
-                                                      },
-                                                      child: Text('No'),
-                                                    ),
-                                                    TextButton(
-                                                      onPressed: () async {
-                                                        await FirebaseFirestore
-                                                            .instance
-                                                            .collection('posts')
-                                                            .doc(post.id)
-                                                            .delete();
-                                                        Navigator.pop(context);
-                                                      },
-                                                      child: Text('Yes'),
-                                                    )
-                                                  ],
-                                                )
-                                              ],
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text(userSnapshot.data!.data()!['name']),
+                                    PopupMenuButton(
+                                      itemBuilder: (context) => [
+                                        const PopupMenuItem(
+                                          value: 0,
+                                          child: Text('Edit'),
+                                        ),
+                                        const PopupMenuItem(
+                                          value: 1,
+                                          child: Text('Delete'),
+                                        ),
+                                      ],
+                                      onSelected: (int v) {
+                                        if (v == 0) {
+                                          appNavPush(
+                                            context,
+                                            EditPostView(
+                                              post: post,
                                             ),
-                                          ),
-                                        );
+                                          );
+                                        } else if (v == 1) {
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              return Dialog(
+                                                child: Padding(
+                                                  padding: const EdgeInsets.all(
+                                                      10.0),
+                                                  child: Column(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      const Text(
+                                                        "Are you sure to delete this post?",
+                                                      ),
+                                                      Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .spaceEvenly,
+                                                        children: [
+                                                          TextButton(
+                                                            onPressed: () {
+                                                              Navigator.pop(
+                                                                  context);
+                                                            },
+                                                            child: const Text(
+                                                                'No'),
+                                                          ),
+                                                          TextButton(
+                                                            onPressed:
+                                                                () async {
+                                                              await FirebaseFirestore
+                                                                  .instance
+                                                                  .collection(
+                                                                      'posts')
+                                                                  .doc(post.id)
+                                                                  .delete();
+                                                              Navigator.pop(
+                                                                  context);
+                                                            },
+                                                            child: Text('Yes'),
+                                                          )
+                                                        ],
+                                                      )
+                                                    ],
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        }
                                       },
-                                    );
-                                  }
-                                },
-                              ),
-                            ],
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 5),
+                                if (post.image != null)
+                                  Image.network(post.image!),
+                                Text(
+                                  post.body,
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          post.likes.toString(),
+                                        ),
+                                        SizedBox(width: 5),
+                                        IconButton(
+                                          icon: Icon(Icons.thumb_up_alt),
+                                          onPressed: () {
+                                            snapshot.data!.docs[index].reference
+                                                .update({
+                                              'likes': FieldValue.increment(1),
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                    Text(
+                                      "${post.comments} comments",
+                                    ),
+                                  ],
+                                )
+                              ],
+                            ),
                           ),
-                          SizedBox(height: 5),
-                          if (post.image != null) Image.network(post.image!),
-                          Text(
-                            post.body,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    post.likes.toString(),
-                                  ),
-                                  SizedBox(width: 5),
-                                  IconButton(
-                                    icon: Icon(Icons.thumb_up_alt),
-                                    onPressed: () {
-                                      snapshot.data!.docs[index].reference
-                                          .update({
-                                        'likes': FieldValue.increment(1),
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
-                              Text(
-                                "${post.comments} comments",
-                              ),
-                            ],
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                );
+                        ),
+                      );
+                    });
               },
             );
           } else {

@@ -27,3 +27,12 @@ void appNavPopUntil(BuildContext context, Widget widget) {
     (route) => route.isFirst,
   );
 }
+
+void appNavPopAndPush(BuildContext context, Widget widget) {
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (context) => widget,
+    ),
+  );
+}
