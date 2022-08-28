@@ -8,7 +8,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class HomeView extends StatelessWidget {
-  const HomeView({Key? key}) : super(key: key);
+  HomeView({Key? key}) : super(key: key);
+
+  String uid = FirebaseAuth.instance.currentUser!.uid;
 
   @override
   Widget build(BuildContext context) {
@@ -60,91 +62,108 @@ class HomeView extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    CircleAvatar(
-                                      backgroundImage: NetworkImage(
-                                        userSnapshot.data!.data()!['image'],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 5),
-                                    Text(userSnapshot.data!.data()!['name']),
-                                    PopupMenuButton(
-                                      itemBuilder: (context) => [
-                                        const PopupMenuItem(
-                                          value: 0,
-                                          child: Text('Edit'),
+                                    Row(
+                                      children: [
+                                        CircleAvatar(
+                                          backgroundImage: NetworkImage(
+                                            userSnapshot.data!.data()!['image'],
+                                          ),
                                         ),
-                                        const PopupMenuItem(
-                                          value: 1,
-                                          child: Text('Delete'),
-                                        ),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                            userSnapshot.data!.data()!['name']),
                                       ],
-                                      onSelected: (int v) {
-                                        if (v == 0) {
-                                          appNavPush(
-                                            context,
-                                            EditPostView(
-                                              post: post,
-                                            ),
-                                          );
-                                        } else if (v == 1) {
-                                          showDialog(
-                                            context: context,
-                                            builder: (context) {
-                                              return Dialog(
-                                                child: Padding(
-                                                  padding: const EdgeInsets.all(
-                                                      10.0),
-                                                  child: Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      const Text(
-                                                        "Are you sure to delete this post?",
-                                                      ),
-                                                      Row(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .spaceEvenly,
-                                                        children: [
-                                                          TextButton(
-                                                            onPressed: () {
-                                                              Navigator.pop(
-                                                                  context);
-                                                            },
-                                                            child: const Text(
-                                                                'No'),
-                                                          ),
-                                                          TextButton(
-                                                            onPressed:
-                                                                () async {
-                                                              await FirebaseFirestore
-                                                                  .instance
-                                                                  .collection(
-                                                                      'posts')
-                                                                  .doc(post.id)
-                                                                  .delete();
-                                                              Navigator.pop(
-                                                                  context);
-                                                            },
-                                                            child: Text('Yes'),
-                                                          )
-                                                        ],
-                                                      )
-                                                    ],
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          );
-                                        }
-                                      },
                                     ),
+                                    if (post.userId == uid)
+                                      PopupMenuButton(
+                                        itemBuilder: (context) => [
+                                          const PopupMenuItem(
+                                            value: 0,
+                                            child: Text('Edit'),
+                                          ),
+                                          const PopupMenuItem(
+                                            value: 1,
+                                            child: Text('Delete'),
+                                          ),
+                                        ],
+                                        onSelected: (int v) {
+                                          if (v == 0) {
+                                            appNavPush(
+                                              context,
+                                              EditPostView(
+                                                post: post,
+                                              ),
+                                            );
+                                          } else if (v == 1) {
+                                            showDialog(
+                                              context: context,
+                                              builder: (context) {
+                                                return Dialog(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            10.0),
+                                                    child: Column(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        const Text(
+                                                          "Are you sure to delete this post?",
+                                                        ),
+                                                        Row(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .spaceEvenly,
+                                                          children: [
+                                                            TextButton(
+                                                              onPressed: () {
+                                                                Navigator.pop(
+                                                                    context);
+                                                              },
+                                                              child: const Text(
+                                                                  'No'),
+                                                            ),
+                                                            TextButton(
+                                                              onPressed:
+                                                                  () async {
+                                                                await FirebaseFirestore
+                                                                    .instance
+                                                                    .collection(
+                                                                        'posts')
+                                                                    .doc(
+                                                                        post.id)
+                                                                    .delete();
+                                                                Navigator.pop(
+                                                                    context);
+                                                              },
+                                                              child:
+                                                                  Text('Yes'),
+                                                            )
+                                                          ],
+                                                        )
+                                                      ],
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            );
+                                          }
+                                        },
+                                      ),
                                   ],
                                 ),
-                                SizedBox(height: 5),
+                                const SizedBox(height: 5),
                                 if (post.image != null)
-                                  Image.network(post.image!),
+                                  Image.network(
+                                    post.image!,
+                                    height: 250,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  ),
+                                const SizedBox(height: 5),
                                 Text(
                                   post.body,
                                 ),
@@ -155,15 +174,24 @@ class HomeView extends StatelessWidget {
                                     Row(
                                       children: [
                                         Text(
-                                          post.likes.toString(),
+                                          post.likes.length.toString(),
                                         ),
                                         SizedBox(width: 5),
                                         IconButton(
-                                          icon: Icon(Icons.thumb_up_alt),
+                                          icon: Icon(
+                                            Icons.thumb_up_alt,
+                                            color: post.isLiked
+                                                ? Colors.blue
+                                                : Colors.black,
+                                          ),
                                           onPressed: () {
                                             snapshot.data!.docs[index].reference
                                                 .update({
-                                              'likes': FieldValue.increment(1),
+                                              'likes': post.isLiked
+                                                  ? FieldValue.arrayRemove(
+                                                      [uid])
+                                                  : FieldValue.arrayUnion(
+                                                      [uid]),
                                             });
                                           },
                                         ),
