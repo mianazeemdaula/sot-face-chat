@@ -1,9 +1,9 @@
-import 'package:face_chat/views/auth/login_view.dart';
-import 'package:face_chat/views/home/home_view.dart';
+import 'dart:io';
+
 import 'package:face_chat/views/splash/splash_view.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 // ? for null value (means no value at the time of the creation/making);
 // make sure value is not null
@@ -12,6 +12,9 @@ import 'package:flutter/material.dart';
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  if (Platform.isAndroid) {
+    AndroidGoogleMapsFlutter.useAndroidViewSurface = true;
+  }
   runApp(const FaceChat());
 }
 
