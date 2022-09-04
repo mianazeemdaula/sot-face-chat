@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:face_chat/views/auth/profile_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../core/app_navigator.dart';
@@ -48,23 +49,35 @@ class PostTab extends StatelessWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Row(
-                                  children: [
-                                    SizedBox(
-                                      width: 30,
-                                      height: 30,
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(10),
-                                        child: CachedNetworkImage(
-                                          imageUrl: userSnapshot.data!
-                                              .data()!['image'],
-                                          fit: BoxFit.cover,
+                                GestureDetector(
+                                  onTap: () {
+                                    appNavPush(
+                                      context,
+                                      ProfileView(
+                                        user: userSnapshot.data!.data()!,
+                                        uid: userSnapshot.data!.id,
+                                      ),
+                                    );
+                                  },
+                                  child: Row(
+                                    children: [
+                                      SizedBox(
+                                        width: 30,
+                                        height: 30,
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          child: CachedNetworkImage(
+                                            imageUrl: userSnapshot.data!
+                                                .data()!['image'],
+                                            fit: BoxFit.cover,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 5),
-                                    Text(userSnapshot.data!.data()!['name']),
-                                  ],
+                                      const SizedBox(width: 5),
+                                      Text(userSnapshot.data!.data()!['name']),
+                                    ],
+                                  ),
                                 ),
                                 if (post.userId == uid)
                                   PopupMenuButton(
