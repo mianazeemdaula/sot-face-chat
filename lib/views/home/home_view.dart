@@ -3,6 +3,7 @@ import 'package:face_chat/views/auth/login_view.dart';
 import 'package:face_chat/views/home/add_post.dart';
 import 'package:face_chat/views/home/map_tab.dart';
 import 'package:face_chat/views/home/posts_tab.dart';
+import 'package:face_chat/views/inbox/inbox_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -34,10 +35,7 @@ class _HomeViewState extends State<HomeView> {
       ),
       body: IndexedStack(
         index: pageIndex,
-        children: [
-          PostTab(),
-          MapTab(),
-        ],
+        children: [PostTab(), MapTab(), InboxView()],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -57,7 +55,8 @@ class _HomeViewState extends State<HomeView> {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.map), label: "Map")
+          BottomNavigationBarItem(icon: Icon(Icons.map), label: "Map"),
+          BottomNavigationBarItem(icon: Icon(Icons.chat), label: "Inbox"),
         ],
       ),
     );

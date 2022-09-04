@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:face_chat/models/message.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -28,12 +29,48 @@ class ChatView extends StatelessWidget {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
-                  return ListView.builder(
-                    reverse: true,
-                    itemCount: snapshot.data!.docs.length,
-                    itemBuilder: (context, index) {
-                      return Text(snapshot.data!.docs[index].data()['message']);
-                    },
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ListView.builder(
+                      reverse: true,
+                      itemCount: snapshot.data!.docs.length,
+                      itemBuilder: (context, index) {
+                        var msg =
+                            Message.fromJson(snapshot.data!.docs[index].data());
+                        bool isMineMsg = msg.sendBy == authId;
+                        return Row(
+                          mainAxisAlignment: isMineMsg
+                              ? MainAxisAlignment.end
+                              : MainAxisAlignment.start,
+                          children: [
+                            Container(
+                              margin: EdgeInsets.only(bottom: 10),
+                              padding: EdgeInsets.all(5),
+                              decoration: BoxDecoration(
+                                color: isMineMsg
+                                    ? Colors.blue.shade100
+                                    : Colors.green.shade100,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              width: MediaQuery.of(context).size.width * 0.5,
+                              child: Column(
+                                crossAxisAlignment: isMineMsg
+                                    ? CrossAxisAlignment.end
+                                    : CrossAxisAlignment.start,
+                                children: [
+                                  Text(msg.message),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    msg.createdAt.toString().substring(10, 16),
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   );
                 }
                 return const Center(
@@ -69,6 +106,13 @@ class ChatView extends StatelessWidget {
                     "message": msgTextContoller.text,
                     'created_at': FieldValue.serverTimestamp(),
                     'send_by': authId,
+                  });
+                  await FirebaseFirestore.instance
+                      .collection("inbox")
+                      .doc(chatId)
+                      .update({
+                    "last_message": msgTextContoller.text,
+                    'last_message_time': FieldValue.serverTimestamp(),
                   });
                   msgTextContoller.clear();
                 },
