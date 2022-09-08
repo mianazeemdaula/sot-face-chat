@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:face_chat/models/message.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,9 +8,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/foundation/key.dart';
 import 'package:flutter/src/widgets/framework.dart';
 
+import 'package:http/http.dart' as http;
+
 class ChatView extends StatelessWidget {
-  ChatView({Key? key, required this.chatId}) : super(key: key);
+  ChatView({Key? key, required this.chatId, required this.userId})
+      : super(key: key);
   final String chatId;
+
+  final String userId;
 
   final formKey = GlobalKey<FormState>();
   final msgTextContoller = TextEditingController();
@@ -114,6 +121,33 @@ class ChatView extends StatelessWidget {
                     "last_message": msgTextContoller.text,
                     'last_message_time': FieldValue.serverTimestamp(),
                   });
+
+                  String? token;
+                  var user = await FirebaseFirestore.instance
+                      .doc("users/$userId")
+                      .get();
+                  if (user.exists) {
+                    token = user.data()!['fcm_token'];
+                  }
+                  if (token != null) {
+                    http.post(
+                        Uri.parse('https://api.rnfirebase.io/messaging/send'),
+                        headers: {
+                          'Content-Type': 'application/json; charset=UTF-8',
+                        },
+                        body: jsonEncode({
+                          'token': token,
+                          'data': {
+                            'screen': 'chat',
+                            'user': authId,
+                          },
+                          'notification': {
+                            'title': 'New Message',
+                            'body': msgTextContoller.text,
+                          },
+                        }));
+                  }
+
                   msgTextContoller.clear();
                 },
                 icon: Icon(Icons.send),

@@ -3,10 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:face_chat/core/app_navigator.dart';
 import 'package:face_chat/views/inbox/chat_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/foundation/key.dart';
-import 'package:flutter/src/widgets/framework.dart';
 
 class InboxView extends StatelessWidget {
   InboxView({Key? key}) : super(key: key);
@@ -43,16 +40,20 @@ class InboxView extends StatelessWidget {
                       subtitle: Text(
                           snapshot.data!.docs[index].data()['last_message']),
                       onTap: () {
-                        appNavPush(context,
-                            ChatView(chatId: snapshot.data!.docs[index].id));
+                        appNavPush(
+                            context,
+                            ChatView(
+                              chatId: snapshot.data!.docs[index].id,
+                              userId: userId,
+                            ));
                       },
                     );
                   } else if (userSnapshot.hasError) {
-                    return Center(
+                    return const Center(
                       child: Text("Error"),
                     );
                   }
-                  return Center(
+                  return const Center(
                     child: CircularProgressIndicator(),
                   );
                 },

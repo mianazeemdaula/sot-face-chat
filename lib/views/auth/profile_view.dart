@@ -49,7 +49,12 @@ class ProfileView extends StatelessWidget {
                   },
                 );
               }
-              appNavPush(context, ChatView(chatId: chatId));
+              appNavPush(
+                  context,
+                  ChatView(
+                    chatId: chatId,
+                    userId: uid,
+                  ));
             },
             child: Text('Chat'),
           ),
