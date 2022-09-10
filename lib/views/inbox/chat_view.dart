@@ -4,11 +4,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:face_chat/models/message.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/foundation/key.dart';
-import 'package:flutter/src/widgets/framework.dart';
-
 import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
 
 class ChatView extends StatelessWidget {
   ChatView({Key? key, required this.chatId, required this.userId})
@@ -51,8 +50,8 @@ class ChatView extends StatelessWidget {
                               : MainAxisAlignment.start,
                           children: [
                             Container(
-                              margin: EdgeInsets.only(bottom: 10),
-                              padding: EdgeInsets.all(5),
+                              margin: const EdgeInsets.only(bottom: 10),
+                              padding: const EdgeInsets.all(5),
                               decoration: BoxDecoration(
                                 color: isMineMsg
                                     ? Colors.blue.shade100
@@ -66,10 +65,10 @@ class ChatView extends StatelessWidget {
                                     : CrossAxisAlignment.start,
                                 children: [
                                   Text(msg.message),
-                                  SizedBox(height: 2),
+                                  const SizedBox(height: 2),
                                   Text(
                                     msg.createdAt.toString().substring(10, 16),
-                                    style: TextStyle(fontSize: 10),
+                                    style: const TextStyle(fontSize: 10),
                                   ),
                                 ],
                               ),
@@ -130,22 +129,28 @@ class ChatView extends StatelessWidget {
                     token = user.data()!['fcm_token'];
                   }
                   if (token != null) {
-                    http.post(
-                        Uri.parse('https://api.rnfirebase.io/messaging/send'),
-                        headers: {
-                          'Content-Type': 'application/json; charset=UTF-8',
-                        },
-                        body: jsonEncode({
-                          'token': token,
-                          'data': {
-                            'screen': 'chat',
-                            'user': authId,
-                          },
-                          'notification': {
-                            'title': 'New Message',
-                            'body': msgTextContoller.text,
-                          },
-                        }));
+                    // String _token =
+                    //     await FirebaseAuth.instance.currentUser!.getIdToken();
+                    // print(_token);
+                    // Response res = await http.post(
+                    //     Uri.parse(
+                    //         'https://fcm.googleapis.com/v1/projects/sot-tech/messages:send'),
+                    //     headers: {
+                    //       'Content-Type': 'application/json; charset=UTF-8',
+                    //       'Authorization': "Bearer $_token"
+                    //     },
+                    //     body: jsonEncode({
+                    //       'token': token,
+                    //       'data': {
+                    //         'screen': 'chat',
+                    //         'user': authId,
+                    //       },
+                    //       'notification': {
+                    //         'title': 'New Message',
+                    //         'body': msgTextContoller.text,
+                    //       },
+                    //     }));
+                    // print(res.body.toString());
                   }
 
                   msgTextContoller.clear();
