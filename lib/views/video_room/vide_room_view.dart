@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:agora_rtc_engine/rtc_engine.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -18,25 +20,54 @@ class VideoRoomView extends StatefulWidget {
 class _VideoRoomViewState extends State<VideoRoomView> {
   final uid = FirebaseAuth.instance.currentUser!.uid;
 
+  final msgTextContoller = TextEditingController();
+
   late String channelName;
   late String token;
   int? agoraUid;
   late ClientRole role;
   String appId = "d6bad162b93145d0b2bdcf01ff8d2566";
+  late DocumentReference<Map<String, dynamic>> roomDoc;
+  late DocumentSnapshot<Map<String, dynamic>> authData;
   @override
   void initState() {
     super.initState();
+    roomDoc = FirebaseFirestore.instance.doc("rooms/${widget.room.id}");
+
     channelName = widget.room.id;
     role = widget.room.data()['creator_id'] == uid
         ? ClientRole.Broadcaster
         : ClientRole.Audience;
-    if (role == ClientRole.Broadcaster) {
-      FirebaseFirestore.instance.doc("rooms/${widget.room.id}").update({
-        'live': true,
+
+    initAgora().then((value) async {
+      if (role == ClientRole.Broadcaster) {
+        await roomDoc.update({
+          'live': true,
+        });
+      } else {
+        await roomDoc.update({
+          'joined_uids': FieldValue.arrayUnion([uid]),
+        });
+      }
+      FirebaseFirestore.instance.doc("users/$uid").get().then((value) {
+        if (mounted) {
+          setState(() {
+            authData = value;
+          });
+        }
       });
-    }
-    initAgora();
+      stream = roomDoc.snapshots().listen((event) {
+        isLive = event.data()!['live'];
+        audianceCount = List.from(event.data()!['joined_uids']).length;
+        setState(() {});
+      });
+    });
   }
+
+  late StreamSubscription stream;
+
+  bool isLive = false;
+  int audianceCount = 0;
 
   late RtcEngine _engine;
 
@@ -66,16 +97,21 @@ class _VideoRoomViewState extends State<VideoRoomView> {
     ));
   }
 
-  Set<int> uids = Set<int>();
+  Set<int> uids = <int>{};
 
   @override
-  void dispose() {
+  void dispose() async {
+    await stream.cancel();
     if (role == ClientRole.Broadcaster) {
-      FirebaseFirestore.instance.doc("rooms/${widget.room.id}").update({
+      roomDoc.update({
         'live': false,
       });
+    } else {
+      roomDoc.update({
+        'joined_uids': FieldValue.arrayRemove([uid])
+      });
     }
-    _engine.leaveChannel();
+    await _engine.leaveChannel();
     super.dispose();
   }
 
@@ -83,29 +119,161 @@ class _VideoRoomViewState extends State<VideoRoomView> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            if (uid == widget.room.data()['creator_id'])
-              const Expanded(child: RtcLocalView.SurfaceView()),
-            if (uid != widget.room.data()['creator_id'])
-              Expanded(
-                child: Stack(
-                  children: [
-                    RtcRemoteView.SurfaceView(
-                      channelId: channelName,
-                      uid: uids.first,
+            Column(
+              children: [
+                if (uid == widget.room.data()['creator_id'])
+                  const Expanded(child: RtcLocalView.SurfaceView()),
+                if (uid != widget.room.data()['creator_id'])
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        if (uids.isNotEmpty)
+                          RtcRemoteView.SurfaceView(
+                            channelId: channelName,
+                            uid: uids.first,
+                          ),
+                        Container(
+                          height: 250,
+                          width: 250,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.white, width: 5),
+                          ),
+                          child: RtcLocalView.SurfaceView(),
+                        ),
+                      ],
                     ),
-                    Container(
-                      height: 250,
-                      width: 250,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.white, width: 5),
+                  ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  width: 70,
+                  padding: EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: isLive ? Colors.red : Colors.grey,
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 10,
+                        backgroundColor:
+                            isLive ? Colors.red.shade600 : Colors.grey.shade600,
                       ),
-                      child: RtcLocalView.SurfaceView(),
+                      SizedBox(width: 5),
+                      Text("Live")
+                    ],
+                  ),
+                ),
+                Container(
+                  width: 70,
+                  padding: EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade400,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.supervised_user_circle),
+                      SizedBox(width: 5),
+                      Text("$audianceCount")
+                    ],
+                  ),
+                )
+              ],
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                height: MediaQuery.of(context).size.height * 0.5,
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Expanded(
+                      child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                        stream: roomDoc
+                            .collection('msgs')
+                            .orderBy('created_at', descending: true)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            return ListView.builder(
+                              reverse: true,
+                              itemCount: snapshot.data!.docs.length,
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundImage: CachedNetworkImageProvider(
+                                        snapshot.data!.docs[index]
+                                            .data()['sender_image']),
+                                  ),
+                                  title: Text(
+                                    snapshot.data!.docs[index]
+                                        .data()['sender_name'],
+                                  ),
+                                  subtitle: Text(
+                                    snapshot.data!.docs[index]
+                                        .data()['message'],
+                                  ),
+                                );
+                              },
+                            );
+                          }
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        },
+                      ),
                     ),
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            FirebaseFirestore.instance
+                                .collection('wallet')
+                                .doc(widget.room.data()['creator_id'])
+                                .update({
+                              'balance': FieldValue.increment(200),
+                            });
+                            FirebaseFirestore.instance
+                                .collection('wallet')
+                                .doc(uid)
+                                .update({
+                              'balance': FieldValue.increment(-200),
+                            });
+                          },
+                          icon: Icon(Icons.emoji_emotions, color: Colors.white),
+                        ),
+                        Expanded(
+                          child: TextFormField(
+                            controller: msgTextContoller,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        IconButton(
+                          onPressed: () async {
+                            if (msgTextContoller.text.isNotEmpty) {
+                              await roomDoc.collection('msgs').doc().set({
+                                'message': msgTextContoller.text,
+                                'sender_id': uid,
+                                'sender_name': authData.data()!['name'],
+                                'sender_image': authData.data()!['image'],
+                                'created_at': FieldValue.serverTimestamp(),
+                              });
+                              msgTextContoller.clear();
+                            }
+                          },
+                          icon: Icon(Icons.send),
+                        )
+                      ],
+                    )
                   ],
                 ),
               ),
+            )
           ],
         ),
       ),
