@@ -1,4 +1,5 @@
 class Const {
+  static const String ApiURL = "https://jsonplaceholder.typicode.com";
   static const String mapStyle = """[
   {
     "featureType": "poi",
