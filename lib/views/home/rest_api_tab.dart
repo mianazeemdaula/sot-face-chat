@@ -1,7 +1,8 @@
 import 'dart:convert';
-
+import 'package:face_chat/core/app_navigator.dart';
 import 'package:face_chat/core/const.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:face_chat/core/snack_bar.dart';
+import 'package:face_chat/views/api/comment_view.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -42,40 +43,64 @@ class _RestApiTabState extends State<RestApiTab> {
       future: myFuture,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          return ListView.separated(
-            itemCount: posts.length,
-            separatorBuilder: (context, index) => SizedBox(height: 10),
-            itemBuilder: (context, index) {
-              return Material(
-                color: Colors.white,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "${posts[index]['title']} ${posts[index]['id']}",
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 5),
-                      Text(posts[index]['body']),
-                      IconButton(
-                        onPressed: () async {
-                          int id = posts[index]['id'];
-                          http.Response res = await http
-                              .delete(Uri.parse("${Const.ApiURL}/posts/$id"));
-                          if (res.statusCode == 200) {
-                            posts.removeWhere((e) => e['id'] == id);
-                            setState(() {});
-                          }
-                        },
-                        icon: Icon(Icons.delete),
-                      ),
-                    ],
-                  ),
-                ),
-              );
+          return RefreshIndicator(
+            onRefresh: () async {
+              await fetchPosts();
             },
+            child: ListView.separated(
+              itemCount: posts.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                return Material(
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "${posts[index]['title']} ${posts[index]['id']}",
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 5),
+                        Text(posts[index]['body']),
+                        Row(
+                          children: [
+                            IconButton(
+                              onPressed: () async {
+                                try {
+                                  int id = posts[index]['id'];
+                                  http.Response res = await http.delete(
+                                      Uri.parse("${Const.ApiURL}/posts/$id"));
+                                  if (res.statusCode == 200) {
+                                    posts.removeWhere((e) => e['id'] == id);
+                                    setState(() {});
+                                  }
+                                } catch (e) {
+                                  appSnackBar(context, e.toString());
+                                }
+                              },
+                              icon: const Icon(Icons.delete),
+                            ),
+                            IconButton(
+                              onPressed: () async {
+                                try {
+                                  int id = posts[index]['id'];
+                                  appNavPush(context, CommentsView(postId: id));
+                                } catch (e) {
+                                  appSnackBar(context, e.toString());
+                                }
+                              },
+                              icon: const Icon(Icons.comment),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
           );
         } else if (snapshot.hasError) {
           return Center(

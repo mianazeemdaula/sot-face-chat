@@ -47,5 +47,10 @@
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Need to access to the photo for uploading the photo to the post</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>sms</string>
+		<string>tel</string>
+	</array>
 </dict>
 </plist>
